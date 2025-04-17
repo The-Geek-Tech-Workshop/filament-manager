@@ -2,9 +2,13 @@
 
 package com.gtw.filamentmanager.ui
 
+import android.nfc.Tag
+import android.util.Log
 import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gtw.filamentmanager.data.FilamentSpoolParserFactory
+import com.gtw.filamentmanager.data.FilamentSpoolWriterFactory
 import com.gtw.filamentmanager.model.domain.AMS
 import com.gtw.filamentmanager.model.domain.DiscoveredPrinter
 import com.gtw.filamentmanager.model.domain.ExternalSpool
@@ -24,6 +28,7 @@ import com.gtw.filamentmanager.model.repos.PrinterRepo
 import com.gtw.filamentmanager.model.repos.PrinterSearchCompleted
 import com.gtw.filamentmanager.model.repos.PrinterSearchStarted
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,11 +46,12 @@ data class PrinterFilamentTrays(
     val ams: List<FilamentTray>
 )
 
-sealed interface ScanDestination
+sealed interface TagAction
 data class ScanToFilamentTray(val printer: DiscoveredPrinter, val tray: FilamentTray) :
-    ScanDestination
+    TagAction
 
-data object ScanToApp : ScanDestination
+data object ScanToApp : TagAction
+data class WriteFilamentSpoolToTag(val filamentSpool: FilamentSpool) : TagAction
 
 data class PrinterState(
     val discoveredPrinters: List<DiscoveredPrinter> = emptyList(),
@@ -56,7 +62,7 @@ data class PrinterState(
     val filamentTrays: Map<DiscoveredPrinter, PrinterFilamentTrays> = emptyMap(),
     val printerSearchesInProgress: Set<Uuid> = emptySet(),
     val showPrinterDetails: Boolean = false,
-    val scanDestination: ScanDestination? = null,
+    val tagAction: TagAction? = null,
     val connectedPrinters: Map<DiscoveredPrinter, ConnectedPrinter> = emptyMap(),
     val connectedPrintersAwaitingRefresh: Set<DiscoveredPrinter> = emptySet()
 ) {
@@ -83,6 +89,8 @@ class PrinterViewModel @Inject constructor(
     private val printerAuthenticationDetailsRepository: PrinterAuthenticationDetailsRepo,
     private val printerRepo: PrinterRepo,
     private val printerConnector: PrinterConnector,
+    private val filamentSpoolParserFactory: FilamentSpoolParserFactory,
+    private val filamentSpoolWriterFactory: FilamentSpoolWriterFactory
 ) : ViewModel() {
     private val _state = MutableStateFlow(PrinterState())
     val printerState: StateFlow<PrinterState> = _state.asStateFlow()
@@ -243,8 +251,8 @@ class PrinterViewModel @Inject constructor(
         }
     }
 
-    fun setScanDestination(scanDestination: ScanDestination?) {
-        _state.update { it.copy(scanDestination = scanDestination) }
+    fun setScanDestination(scanDestination: TagAction?) {
+        _state.update { it.copy(tagAction = scanDestination) }
     }
 
     fun clearPrinterAuthenticationDetails() {
@@ -257,18 +265,43 @@ class PrinterViewModel @Inject constructor(
         }
     }
 
-    fun newFilamentSpoolScanned(filamentSpool: FilamentSpool) {
-        when (val scanDestination = _state.value.scanDestination) {
-            is ScanToFilamentTray -> withConnectedPrinter(scanDestination.printer) {
-                setFilamentTraySpool(
-                    filamentSpool = filamentSpool,
-                    filamentTray = scanDestination.tray
+    fun nfcTagDetected(tag: Tag) {
+        when (val scanDestination = _state.value.tagAction) {
+            is ScanToFilamentTray -> parseFilamentSpool(tag) { filamentSpool ->
+                withConnectedPrinter(scanDestination.printer) {
+                    setFilamentTraySpool(
+                        filamentSpool = filamentSpool,
+                        filamentTray = scanDestination.tray
+                    )
+                }
+            }
+
+            is ScanToApp -> parseFilamentSpool(tag) { filamentSpool ->
+                _state.update { it.copy(scannedFilament = filamentSpool) }
+            }
+
+            is WriteFilamentSpoolToTag -> {
+                filamentSpoolWriterFactory.create(scanDestination.filamentSpool.format)?.write(
+                    tag, scanDestination.filamentSpool
                 )
             }
 
-            is ScanToApp -> _state.update { it.copy(scannedFilament = filamentSpool) }
-            else -> Unit
+            null -> Unit
         }
+    }
+
+    private fun parseFilamentSpool(tag: Tag, onParsed: (FilamentSpool) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                filamentSpoolParserFactory.create(tag)?.parse(tag)?.also {
+                    displayMessage("Filament parsed from ${it.format.formatName} format with UID: ${it.tagUID}")
+                }?.let(onParsed)
+            } catch (_: Exception) {
+                Log.e("NFC", "Problem parsing filament spool")
+                displayMessage("Problem parsing filament spool")
+            }
+        }
+
     }
 
     private fun getAuthenticationDetails(printer: DiscoveredPrinter): PrinterAuthenticationDetails? =

@@ -40,7 +40,6 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.gtw.filamentmanager.data.bambu.parseBambuFilamentSpool
 import com.gtw.filamentmanager.ui.components.AccessCodeInputDialogue
 import com.gtw.filamentmanager.ui.navigation.AppNavHost
 import com.gtw.filamentmanager.ui.navigation.AppTab
@@ -263,18 +262,7 @@ class MainActivity : ComponentActivity() {
             when (intent.action) {
 //                NfcAdapter.ACTION_TECH_DISCOVERED -> {
                 NfcAdapter.ACTION_TAG_DISCOVERED -> {
-                    getTagFromIntent(intent)?.let { tag ->
-                        if (tag.techList.contains("android.nfc.tech.MifareClassic")) {
-                            try {
-                                parseBambuFilamentSpool(tag).getOrThrow().let { filamentSpool ->
-                                    viewModel.newFilamentSpoolScanned(filamentSpool)
-                                    viewModel.displayMessage("Scanned spool with id: ${filamentSpool.tagUID}")
-                                }
-                            } catch (_: Exception) {
-                                viewModel.displayMessage("Problem parsing filament spool")
-                            }
-                        }
-                    }
+                    getTagFromIntent(intent)?.let { viewModel.nfcTagDetected(it) }
                 }
             }
         }
