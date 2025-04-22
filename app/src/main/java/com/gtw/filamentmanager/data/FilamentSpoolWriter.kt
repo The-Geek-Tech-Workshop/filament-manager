@@ -2,22 +2,24 @@ package com.gtw.filamentmanager.data
 
 import android.nfc.Tag
 import com.gtw.filamentmanager.data.bambu.BambuFilamentSpoolWriter
+import com.gtw.filamentmanager.model.domain.BambuFilamentSpool
 import com.gtw.filamentmanager.model.domain.FilamentSpool
-import com.gtw.filamentmanager.model.domain.TagFormat
+import javax.inject.Inject
 
 interface FilamentSpoolWriter<F : FilamentSpool> {
-
-    val tagFormat: TagFormat
 
     suspend fun write(tag: Tag, filamentSpool: F)
 
 }
 
-class FilamentSpoolWriterFactory() {
-    private val writers = listOf<FilamentSpoolWriter<out FilamentSpool>>(
-        BambuFilamentSpoolWriter()
-    )
+class FilamentSpoolWriterFactory @Inject constructor(
+    private val bambuFilamentSpoolWriter: BambuFilamentSpoolWriter
+) {
 
-    fun create(tagFormat: TagFormat): FilamentSpoolWriter<out FilamentSpool>? =
-        writers.firstOrNull { it.tagFormat == tagFormat }
+    suspend fun <F : FilamentSpool> write(tag: Tag, filamentSpool: F) {
+        when (filamentSpool) {
+            is BambuFilamentSpool -> bambuFilamentSpoolWriter.write(tag, filamentSpool)
+            else -> null
+        }
+    }
 }

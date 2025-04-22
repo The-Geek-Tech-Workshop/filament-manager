@@ -13,9 +13,11 @@ interface FilamentSpoolParser<out F : FilamentSpool> {
     suspend fun parse(tag: Tag): F
 }
 
-class FilamentSpoolParserFactory @Inject constructor() {
+class FilamentSpoolParserFactory @Inject constructor(
+    bambuFilamentSpoolParser: BambuFilamentSpoolParser
+) {
     private val parsers = listOf<FilamentSpoolParser<FilamentSpool>>(
-        BambuFilamentSpoolParser()
+        bambuFilamentSpoolParser
     )
 
     suspend fun create(tag: Tag): FilamentSpoolParser<FilamentSpool>? =

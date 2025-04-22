@@ -4,13 +4,21 @@ import androidx.compose.ui.graphics.Color
 import kotlin.time.Duration
 
 sealed interface FilamentSpool {
-    val format: TagFormat
     val tagUID: String
+    val tagFormat: TagFormat<out FilamentSpool>
 }
 
-enum class TagFormat(val formatName: String) {
-    BAMBU("Bambu");
+
+sealed interface TagFormat<F : FilamentSpool> {
+    val name: String
 }
+
+object TagFormats {
+    object BAMBU : TagFormat<BambuFilamentSpool> {
+        override val name: String = "Bambu"
+    }
+}
+
 
 data class TrayInfoIndex(val materialVariantId: String, val uniqueMaterialId: String)
 
@@ -33,8 +41,8 @@ enum class DetailedFilamentType(val bambuName: String) {
 }
 
 data class BambuFilamentSpool(
-    override val format: TagFormat = TagFormat.BAMBU,
     override val tagUID: String,
+    override val tagFormat: TagFormats.BAMBU = TagFormats.BAMBU,
     val trayInfoIndex: TrayInfoIndex,
     val filamentType: String,
     val detailedFilamentType: DetailedFilamentType,

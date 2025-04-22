@@ -2,9 +2,9 @@ package com.gtw.filamentmanager.data.bambu
 
 import android.nfc.Tag
 import android.nfc.tech.MifareClassic
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import com.gtw.filamentmanager.data.FilamentSpoolParser
-import com.gtw.filamentmanager.data.Hkdf
 import com.gtw.filamentmanager.model.domain.BambuFilamentSpool
 import com.gtw.filamentmanager.model.domain.DetailedFilamentType
 import com.gtw.filamentmanager.model.domain.TrayInfoIndex
@@ -12,27 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
-
-@OptIn(ExperimentalUnsignedTypes::class)
-private val salt = ubyteArrayOf(
-    0x9au,
-    0x75u,
-    0x9cu,
-    0xf2u,
-    0xc4u,
-    0xf7u,
-    0xcau,
-    0xffu,
-    0x22u,
-    0x2cu,
-    0xb9u,
-    0x76u,
-    0x9bu,
-    0x41u,
-    0xbcu,
-    0x96u
-).toByteArray()
 
 private fun ByteArray.takeUntilNull(): ByteArray =
     this.takeWhile { it.toInt() != '\u0000'.code }.toByteArray()
@@ -41,9 +22,6 @@ private fun ByteArray.encodeToAsciiString() = String(
     takeUntilNull(),
     Charsets.US_ASCII
 )
-
-private val keyAContext = "RFID-A\u0000".toByteArray(Charsets.US_ASCII)
-private val keyBContext = "RFID-B\u0000".toByteArray(Charsets.US_ASCII)
 
 private fun ByteArray.bytesToShort(): Short {
     val byteBuffer = ByteBuffer.wrap(this)
@@ -59,11 +37,9 @@ private fun ByteArray.bytesToFloat(): Float {
 
 fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
 
-private const val sectorKeyByteLength = 6
-
-private val HKDF = Hkdf.getInstance("HmacSHA256")
-
-class BambuFilamentSpoolParser() : FilamentSpoolParser<BambuFilamentSpool> {
+class BambuFilamentSpoolParser @Inject constructor(
+    private val bambuKeyGenerator: BambuKeyGenerator
+) : FilamentSpoolParser<BambuFilamentSpool> {
 
     override suspend fun canParseTag(tag: Tag): Boolean =
         if (tag.techList.contains("android.nfc.tech.MifareClassic")) {
@@ -71,13 +47,7 @@ class BambuFilamentSpoolParser() : FilamentSpoolParser<BambuFilamentSpool> {
                 MifareClassic.get(tag)?.let { mifare ->
                     try {
                         mifare.connect()
-                        val keyAs = HKDF.deriveKey(
-                            masterKey = tag.id,
-                            salt = salt,
-                            info = keyAContext,
-                            sectorKeyByteLength,
-                            16
-                        )
+                        val keyAs = bambuKeyGenerator.generateKeyAs(tag.id)
                         mifare.authenticateSectorWithKeyA(0, keyAs[0])
                     } catch (_: Exception) {
                         false
@@ -100,13 +70,7 @@ class BambuFilamentSpoolParser() : FilamentSpoolParser<BambuFilamentSpool> {
                 try {
 
                     mifare.connect()
-                    val keyAs = HKDF.deriveKey(
-                        masterKey = tagUniqueId,
-                        salt = salt,
-                        info = keyAContext,
-                        sectorKeyByteLength,
-                        16
-                    )
+                    val keyAs = bambuKeyGenerator.generateKeyAs(tagUniqueId)
 
                     fun extractBlockBytes(sector: Int, block: Int): ByteArray {
                         if (mifare.authenticateSectorWithKeyA(sector, keyAs[sector])) {
@@ -139,6 +103,7 @@ class BambuFilamentSpoolParser() : FilamentSpoolParser<BambuFilamentSpool> {
                             val green = it[1].toUByte().toInt()
                             val blue = it[2].toUByte().toInt()
                             val alpha = it[3].toUByte().toInt()
+                            Log.d("BambuFilamentSpoolParser", "parse: $red $green $blue $alpha")
                             Color(red, green, blue, alpha)
                         },
                         weightInGrams = extractBlockBytes(1, 1).slice(4..5).toByteArray()

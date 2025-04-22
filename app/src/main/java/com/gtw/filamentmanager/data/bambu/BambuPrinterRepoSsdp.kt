@@ -26,7 +26,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 
-class PrinterRepoSsdp @Inject constructor() : PrinterRepo {
+class BambuPrinterRepoSsdp @Inject constructor() : PrinterRepo {
     private val _printerFlow = MutableSharedFlow<PrinterSearchEvent>(0)
     override val events: Flow<PrinterSearchEvent> = _printerFlow
 

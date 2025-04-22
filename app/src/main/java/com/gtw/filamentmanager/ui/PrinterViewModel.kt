@@ -281,9 +281,18 @@ class PrinterViewModel @Inject constructor(
             }
 
             is WriteFilamentSpoolToTag -> {
-                filamentSpoolWriterFactory.create(scanDestination.filamentSpool.format)?.write(
-                    tag, scanDestination.filamentSpool
-                )
+                viewModelScope.launch {
+                    try {
+                        filamentSpoolWriterFactory.write(
+                            tag, scanDestination.filamentSpool
+                        )
+                        displayMessage("Filament data written to tag")
+                    } catch (e: Exception) {
+                        setScanDestination(ScanToApp)
+                        Log.e("NFC", "Problem writing to tag: $e")
+                        displayMessage("Problem writing to tag: ${e.message}")
+                    }
+                }
             }
 
             null -> Unit
@@ -294,7 +303,7 @@ class PrinterViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 filamentSpoolParserFactory.create(tag)?.parse(tag)?.also {
-                    displayMessage("Filament parsed from ${it.format.formatName} format with UID: ${it.tagUID}")
+                    displayMessage("Filament parsed from ${it.tagFormat.name} format with UID: ${it.tagUID}")
                 }?.let(onParsed)
             } catch (_: Exception) {
                 Log.e("NFC", "Problem parsing filament spool")
