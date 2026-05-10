@@ -1,0 +1,14 @@
+{
+  "id": "vsix-installer",
+  "version": "1.0.0",
+  "name": "VSIX Extension Installer",
+  "description": "Downloads a list of VS Code extension URLs (.vsix) at build time and installs them in the post-create step.",
+  "options": {
+    "extensions": {
+      "type": "string",
+      "default": "",
+      "description": "Comma-separated list of .vsix extension URLs to download and install."
+    }
+  },
+  "postCreateCommand": "/usr/local/share/vsix-extensions/post-create.sh"
+}

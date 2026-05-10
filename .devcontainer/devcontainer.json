@@ -1,0 +1,16 @@
+{
+  "name": "Filament Manager Dev",
+  "image": "mcr.microsoft.com/devcontainers/base:trixie",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "21"
+    },
+    "./features/android-sdk": {
+      "platformsVersion": "35",
+      "buildToolsVersion": "35.0.0"
+    },
+    "./features/vsix-installer": {
+      "extensions": "https://download-cdn.jetbrains.com/kotlin-lsp/262.4739.0/kotlin-server-262.4739.0-linux-amd64.vsix"
+    }
+  }
+}

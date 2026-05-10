@@ -1,0 +1,46 @@
+{
+  "name": "Android SDK",
+  "id": "android-sdk",
+  "version": "1.0.1",
+  "documentationURL": "https://github.com/CASL0/devcontainer-features/tree/main/src/android-sdk",
+  "description": "Installs Android SDK.",
+  "options": {
+    "platformsVersion": {
+      "type": "string",
+      "default": "34",
+      "description": "Select or enter an SDK platform version"
+    },
+    "buildToolsVersion": {
+      "type": "string",
+      "default": "34.0.0",
+      "description": "Select or enter an SDK build tools version"
+    },
+    "installNdk": {
+      "type": "boolean",
+      "default": false,
+      "description": "Install NDK, a toolset that lets you implement parts of your app in native code"
+    },
+    "ndkVersion": {
+      "type": "string",
+      "default": "26.1.10909125",
+      "description": "Select or enter an NDK version"
+    },
+    "installCmake": {
+      "type": "boolean",
+      "default": false,
+      "description": "Install CMake, the cross-platform, open-source build system"
+    },
+    "cmakeVersion": {
+      "type": "string",
+      "proposals": ["3.6.4111459", "3.10.2", "3.18.1", "3.22.1"],
+      "default": "3.22.1",
+      "description": "Select or enter a CMake version"
+    }
+  },
+  "containerEnv": {
+    "ANDROID_SDK_ROOT": "/usr/local/android",
+    "ANDROID_HOME": "/usr/local/android",
+    "PATH": "$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools"
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/java:1"]
+}
