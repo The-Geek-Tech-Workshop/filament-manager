@@ -12,5 +12,12 @@
     "./features/vsix-installer": {
       "extensions": "https://download-cdn.jetbrains.com/kotlin-lsp/262.4739.0/kotlin-server-262.4739.0-linux-amd64.vsix"
     }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "tamasfe.even-better-toml"
+      ]
+    }
   }
 }
