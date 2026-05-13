@@ -6,10 +6,9 @@ import HkdfTestData.example1NumKeys
 import HkdfTestData.example1Salt
 import HkdfTestData.expectedHexKeys1
 import com.gtw.filamentmanager.data.Hkdf
-import org.junit.Assert.assertEquals
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import java.security.NoSuchAlgorithmException
 import java.util.Base64
 import javax.crypto.Mac
@@ -24,74 +23,77 @@ fun String.hexStringToByteArray(): ByteArray =
 
 fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
 
-@RunWith(JUnit4::class)
 class HkdfTest {
 
     private val testMasterKey = "master_key".toByteArray(Charsets.US_ASCII)
     private val testSalt = "salt".toByteArray(Charsets.US_ASCII)
     private val testInfo = "info".toByteArray(Charsets.US_ASCII)
 
-//    @Test
-//    fun `deriveKey with HmacSHA256 and single key`() {
-//        val hkdf = Hkdf.getInstance("HmacSHA256")
-//        val expectedKeyLength = 16
-//        val key = hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength)
-//        assertEquals(expectedKeyLength, key[0].size)
-//    }
-//
-//    @Test
-//    fun `deriveKey with HmacSHA512 and single key`() {
-//        val hkdf = Hkdf.getInstance("HmacSHA512")
-//        val expectedKeyLength = 16
-//        val key = hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength)
-//        assertEquals(expectedKeyLength, key[0].size)
-//    }
-//
-//    @Test
-//    fun `deriveKey with HmacSHA256 and multiple keys`() {
-//        val hkdf = Hkdf.getInstance("HmacSHA256")
-//        val expectedKeyLength = 16
-//        val numKeys = 3
-//        val keys = hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength, numKeys)
-//        assertEquals(numKeys, keys.size)
-//        keys.forEach { assertEquals(expectedKeyLength, it.size) }
-//    }
-//
-//    @Test
-//    fun `deriveKey with HmacSHA512 and multiple keys`() {
-//        val hkdf = Hkdf.getInstance("HmacSHA512")
-//        val expectedKeyLength = 16
-//        val numKeys = 3
-//        val keys = hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength, numKeys)
-//        assertEquals(numKeys, keys.size)
-//        keys.forEach { assertEquals(expectedKeyLength, it.size) }
-//    }
-//
-//    @Test(expected = IllegalArgumentException::class)
-//    fun `deriveKey with invalid key length`() {
-//        val hkdf = Hkdf.getInstance("HmacSHA256")
-//        val digestLength = getDigestLength("HmacSHA256")
-//        val invalidKeyLength = 255 * digestLength + 1
-//        hkdf.deriveKey(testMasterKey, testSalt, testInfo, invalidKeyLength)
-//    }
-//
-//    @Test
-//    fun `deriveKey with empty master key`() {
-//        val hkdf = Hkdf.getInstance("HmacSHA256")
-//        val expectedKeyLength = 16
-//        val emptyMasterKey = ByteArray(0)
-//        val key = hkdf.deriveKey(emptyMasterKey, testSalt, testInfo, expectedKeyLength)
-//        assertEquals(expectedKeyLength, key[0].size)
-//    }
-//
-//    @Test(expected = IllegalArgumentException::class)
-//    fun `deriveKey with large offset`() {
-//        val hkdf = Hkdf.getInstance("HmacSHA256")
-//        val expectedKeyLength = 16
-//        val digestLength = getDigestLength("HmacSHA256")
-//        val largeOffset = 255 * digestLength + 1
-//        hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength, largeOffset)
-//    }
+   @Test
+   fun `deriveKey with HmacSHA256 and single key`() {
+       val hkdf = Hkdf.getInstance("HmacSHA256")
+       val expectedKeyLength = 16
+       val key = hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength)
+       assertEquals(expectedKeyLength, key[0].size)
+   }
+
+   @Test
+   fun `deriveKey with HmacSHA512 and single key`() {
+       val hkdf = Hkdf.getInstance("HmacSHA512")
+       val expectedKeyLength = 16
+       val key = hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength)
+       assertEquals(expectedKeyLength, key[0].size)
+   }
+
+   @Test
+   fun `deriveKey with HmacSHA256 and multiple keys`() {
+       val hkdf = Hkdf.getInstance("HmacSHA256")
+       val expectedKeyLength = 16
+       val numKeys = 3
+       val keys = hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength, numKeys)
+       assertEquals(numKeys, keys.size)
+       keys.forEach { assertEquals(expectedKeyLength, it.size) }
+   }
+
+   @Test
+   fun `deriveKey with HmacSHA512 and multiple keys`() {
+       val hkdf = Hkdf.getInstance("HmacSHA512")
+       val expectedKeyLength = 16
+       val numKeys = 3
+       val keys = hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength, numKeys)
+       assertEquals(numKeys, keys.size)
+       keys.forEach { assertEquals(expectedKeyLength, it.size) }
+   }
+
+   @Test
+   fun `deriveKey with invalid key length`() {
+       val hkdf = Hkdf.getInstance("HmacSHA256")
+       val digestLength = getDigestLength("HmacSHA256")
+       val invalidKeyLength = 255 * digestLength + 1
+       assertThrows(IllegalArgumentException::class.java) {
+           hkdf.deriveKey(testMasterKey, testSalt, testInfo, invalidKeyLength)
+       }
+   }
+
+   @Test
+   fun `deriveKey with empty master key`() {
+       val hkdf = Hkdf.getInstance("HmacSHA256")
+       val expectedKeyLength = 16
+       val emptyMasterKey = ByteArray(0)
+       val key = hkdf.deriveKey(emptyMasterKey, testSalt, testInfo, expectedKeyLength)
+       assertEquals(expectedKeyLength, key[0].size)
+   }
+
+   @Test
+   fun `deriveKey with large offset`() {
+       val hkdf = Hkdf.getInstance("HmacSHA256")
+       val expectedKeyLength = 16
+       val digestLength = getDigestLength("HmacSHA256")
+       val largeOffset = 255 * digestLength + 1
+       assertThrows(IllegalArgumentException::class.java) {
+           hkdf.deriveKey(testMasterKey, testSalt, testInfo, expectedKeyLength, largeOffset)
+       }
+   }
 
     @Throws(NoSuchAlgorithmException::class)
     private fun getDigestLength(macAlgorithm: String): Int {

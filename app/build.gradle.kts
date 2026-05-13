@@ -1,8 +1,10 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    kotlin("plugin.serialization") version "2.1.10"
+    kotlin("plugin.serialization") version "2.3.21"
     id("kotlin-kapt")
     alias(libs.plugins.android.hilt)
 }
@@ -47,14 +49,20 @@ fun getVersionCodeFromGit(): Int {
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget =  JvmTarget.fromTarget("11")
+    }
+}
+
 android {
     namespace = "com.gtw.filamentmanager"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.gtw.filamentmanager"
-        minSdk = 35
-        targetSdk = 35
+        minSdk = 33
+        targetSdk = 36
         versionCode = getVersionCodeFromGit()
         versionName = getVersionNameFromGit()
 
@@ -92,9 +100,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
     }
@@ -121,10 +126,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.hivemq.mqtt.client)
-    implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
-    testImplementation(libs.junit)
+    testImplementation(platform(libs.junit))
+    testImplementation(libs.junitJupiter)
+    testRuntimeOnly(libs.junitRunner)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
