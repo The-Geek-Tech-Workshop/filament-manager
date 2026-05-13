@@ -7,12 +7,16 @@
     },
     "./features/android-sdk": {
       "platformsVersion": "36",
-      "buildToolsVersion": "35.0.0"
+      "buildToolsVersion": "36.0.0"
     },
     "./features/vsix-installer": {
       "extensions": "https://download-cdn.jetbrains.com/kotlin-lsp/262.4739.0/kotlin-server-262.4739.0-linux-amd64.vsix"
     },
     "ghcr.io/jsburckhardt/devcontainer-features/uv:1":{}
+  },
+  "remoteEnv": {
+    "ANDROID_ADB_SERVER_ADDRESS": "host.docker.internal",
+    "ANDROID_ADB_SERVER_PORT": "5037"
   },
   "customizations": {
     "vscode": {

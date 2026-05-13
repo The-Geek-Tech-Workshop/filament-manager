@@ -1,11 +1,8 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     kotlin("plugin.serialization") version "2.3.21"
-    id("kotlin-kapt")
+    alias(libs.plugins.ksp)
     alias(libs.plugins.android.hilt)
 }
 
@@ -49,12 +46,6 @@ fun getVersionCodeFromGit(): Int {
     }
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget =  JvmTarget.fromTarget("11")
-    }
-}
-
 android {
     namespace = "com.gtw.filamentmanager"
     compileSdk = 36
@@ -67,17 +58,6 @@ android {
         versionName = getVersionNameFromGit()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    applicationVariants.all {
-        val variant = this
-        outputs.map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
-            .forEach { output ->
-                val projectName = rootProject.name
-                val outputFileName =
-                    "${projectName.replace(" ", "_")}-${variant.name}-${variant.versionName}.apk"
-                output.outputFileName = outputFileName
-            }
     }
 
     buildTypes {
@@ -105,6 +85,19 @@ android {
     }
 }
 
+androidComponents {
+    onVariants { variant ->
+        val projectName = rootProject.name.replace(" ", "_")
+        variant.outputs.forEach { output ->
+            output.outputFileName.set(
+                output.versionName.map { versionName ->
+                    "${projectName}-${variant.name}-${versionName}.apk"
+                }
+            )
+        }
+    }
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -127,7 +120,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.hivemq.mqtt.client)
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     testImplementation(platform(libs.junit))
     testImplementation(libs.junitJupiter)
     testRuntimeOnly(libs.junitRunner)
@@ -141,9 +134,4 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-}
-
-// Allow references to generated code
-kapt {
-    correctErrorTypes = true
 }

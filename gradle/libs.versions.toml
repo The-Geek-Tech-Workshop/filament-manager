@@ -1,6 +1,6 @@
 [versions]
-agp = "8.13.2"
-hiltAndroid = "2.58" # > 2.58 requires agp 9+
+agp = "9.2.0"
+hiltAndroid = "2.59.2"
 hivemqMqttClient = "1.3.14"
 kotlin = "2.3.21"
 coreKtx = "1.18.0"
@@ -19,6 +19,7 @@ activityKtx = "1.13.0"
 lifecycleViewmodelKtx = "2.10.0"
 lifecycleViewmodelCompose = "2.10.0"
 lifecycleRuntimeCompose = "2.10.0"
+ksp = "2.3.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,7 +54,7 @@ androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lif
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 
