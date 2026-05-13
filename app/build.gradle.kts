@@ -139,6 +139,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
 // Allow references to generated code
 kapt {
     correctErrorTypes = true
