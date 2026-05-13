@@ -3,7 +3,22 @@ package com.gtw.filamentmanager.model.domain
 import androidx.compose.ui.graphics.Color
 import kotlin.time.Duration
 
-sealed interface FilamentSpool
+sealed interface FilamentSpool {
+    val tagUID: String
+    val tagFormat: TagFormat<out FilamentSpool>
+}
+
+
+sealed interface TagFormat<F : FilamentSpool> {
+    val name: String
+}
+
+object TagFormats {
+    object BAMBU : TagFormat<BambuFilamentSpool> {
+        override val name: String = "Bambu"
+    }
+}
+
 
 data class TrayInfoIndex(val materialVariantId: String, val uniqueMaterialId: String)
 
@@ -26,7 +41,8 @@ enum class DetailedFilamentType(val bambuName: String) {
 }
 
 data class BambuFilamentSpool(
-    val tagUID: String,
+    override val tagUID: String,
+    override val tagFormat: TagFormats.BAMBU = TagFormats.BAMBU,
     val trayInfoIndex: TrayInfoIndex,
     val filamentType: String,
     val detailedFilamentType: DetailedFilamentType,

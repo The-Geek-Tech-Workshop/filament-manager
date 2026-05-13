@@ -18,18 +18,13 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Print
-import androidx.compose.material.icons.filled.Scanner
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -40,11 +35,10 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.gtw.filamentmanager.data.bambu.parseBambuFilamentSpool
 import com.gtw.filamentmanager.ui.components.AccessCodeInputDialogue
+import com.gtw.filamentmanager.ui.components.ReadyToWrite
 import com.gtw.filamentmanager.ui.navigation.AppNavHost
-import com.gtw.filamentmanager.ui.navigation.AppTab
-import com.gtw.filamentmanager.ui.navigation.AppTabIndex
+import com.gtw.filamentmanager.ui.navigation.AppTopNavBar
 import com.gtw.filamentmanager.ui.navigation.Destination
 import com.gtw.filamentmanager.ui.navigation.Destination.Companion.AppSettings
 import com.gtw.filamentmanager.ui.navigation.Destination.Companion.FilamentDetails
@@ -170,54 +164,33 @@ class MainActivity : ComponentActivity() {
                         Column(
                             modifier = Modifier.padding(bottom = 16.dp)
                         ) {
-                            TopAppBar(
-                                title = {
-                                    Text(
-                                        text = destination.title(printerState),
-                                        style = MaterialTheme.typography.titleLarge
-                                    )
-                                },
-                                navigationIcon = {
-                                    if (navController.previousBackStackEntry != null) {
-                                        IconButton(
-                                            onClick = { navController.popBackStack() }
-                                        ) {
-                                            Icon(
-                                                Icons.AutoMirrored.Filled.ArrowBack,
-                                                contentDescription = "Go back to previous screen"
-                                            )
-                                        }
-                                    }
-                                }
+                            AppTopNavBar(
+                                destination = destination,
+                                navController = navController,
+                                printerState = printerState
                             )
-                            PrimaryTabRow(
-                                selectedTabIndex = destination.tab().tabIndex
-                            ) {
-                                AppTab(
-                                    label = "Printers",
-                                    icon = Icons.Filled.Print,
-                                    appTab = AppTabIndex.PRINTERS,
-                                    currentDestination = destination,
-                                    onClick = {
-                                        navController.navigate(PrinterList) {
-                                            popUpTo(PrinterList) {
-                                                inclusive = true
-                                            }
-                                        }
-                                    }
-                                )
-                                AppTab(
-                                    label = "Scan",
-                                    icon = Icons.Filled.Scanner,
-                                    appTab = AppTabIndex.SCAN,
-                                    currentDestination = destination,
-                                    onClick = {
-                                        navController.navigate(FilamentScanner)
-                                    }
-                                )
-                            }
                         }
                     },
+                    floatingActionButton = {
+                        when (destination) {
+                            is FilamentScanner -> {
+                                printerState.scannedFilament?.let { filament ->
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.setScanDestination(
+                                                WriteFilamentSpoolToTag(filament)
+                                            )
+                                        }
+                                    ) {
+                                        Icon(Icons.Filled.Edit, contentDescription = "Write to Tag")
+                                    }
+                                }
+                            }
+
+                            else -> Unit
+                        }
+
+                    }
                 ) { contentPadding ->
                     AppNavHost(
                         navHostController = navController,
@@ -243,6 +216,13 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
+                if (printerState.tagAction is WriteFilamentSpoolToTag) {
+                    ReadyToWrite(
+                        onDismiss = {
+                            viewModel.setScanDestination(ScanToApp)
+                        }
+                    )
+                }
             }
         }
     }
@@ -263,18 +243,7 @@ class MainActivity : ComponentActivity() {
             when (intent.action) {
 //                NfcAdapter.ACTION_TECH_DISCOVERED -> {
                 NfcAdapter.ACTION_TAG_DISCOVERED -> {
-                    getTagFromIntent(intent)?.let { tag ->
-                        if (tag.techList.contains("android.nfc.tech.MifareClassic")) {
-                            try {
-                                parseBambuFilamentSpool(tag).getOrThrow().let { filamentSpool ->
-                                    viewModel.newFilamentSpoolScanned(filamentSpool)
-                                    viewModel.displayMessage("Scanned spool with id: ${filamentSpool.tagUID}")
-                                }
-                            } catch (_: Exception) {
-                                viewModel.displayMessage("Problem parsing filament spool")
-                            }
-                        }
-                    }
+                    getTagFromIntent(intent)?.let { viewModel.nfcTagDetected(it) }
                 }
             }
         }

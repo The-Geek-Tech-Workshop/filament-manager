@@ -14,13 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.gtw.filamentmanager.model.domain.DiscoveredPrinter
 import com.gtw.filamentmanager.model.domain.EmptyFilamentTray
 import com.gtw.filamentmanager.model.domain.ExternalSpool
 import com.gtw.filamentmanager.model.domain.FilamentTray
-import com.gtw.filamentmanager.model.domain.PrinterModel
 import com.gtw.filamentmanager.model.domain.SpooledFilamentTray
-import java.net.Inet4Address
 
 @Composable
 fun QuickTextField(label: String, value: String?, modifier: Modifier = Modifier) {
@@ -38,7 +35,6 @@ fun QuickTextField(label: String, value: String?, modifier: Modifier = Modifier)
 @Composable
 fun FilamentDetailsScreen(
     modifier: Modifier = Modifier,
-    printer: DiscoveredPrinter,
     filamentTray: FilamentTray
 ) {
     Column(
@@ -80,12 +76,6 @@ fun FilamentDetailsScreen(
 @Preview
 fun PreviewFilamentDetailsScreen() {
     FilamentDetailsScreen(
-        printer = DiscoveredPrinter(
-            model = PrinterModel.A1,
-            serialNumber = "1234567890",
-            name = "Test Printer",
-            ipAddress = Inet4Address.getByName("192.168.1.1")
-        ),
         filamentTray = SpooledFilamentTray(
             location = ExternalSpool,
             tagUID = "1234567890",

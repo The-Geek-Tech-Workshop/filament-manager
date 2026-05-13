@@ -1,9 +1,10 @@
 package com.gtw.filamentmanager.di
 
 import android.content.Context
+import com.gtw.filamentmanager.data.Hkdf
 import com.gtw.filamentmanager.data.PrinterAuthenticationDetailsRepoSharedPreferences
+import com.gtw.filamentmanager.data.bambu.BambuPrinterRepoSsdp
 import com.gtw.filamentmanager.data.bambu.PrinterConnectorMqtt
-import com.gtw.filamentmanager.data.bambu.PrinterRepoSsdp
 import com.gtw.filamentmanager.model.repos.PrinterAuthenticationDetailsRepo
 import com.gtw.filamentmanager.model.repos.PrinterConnector
 import com.gtw.filamentmanager.model.repos.PrinterRepo
@@ -32,7 +33,7 @@ abstract class AppModuleBindings {
 
     @Binds
     abstract fun bindPrinterRepo(
-        printerRepoSsdp: PrinterRepoSsdp
+        printerRepoSsdp: BambuPrinterRepoSsdp
     ): PrinterRepo
 
     @Binds
@@ -53,6 +54,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDataCoroutineScope(): DataCoroutineScope = DataCoroutineScope()
+
+    @Provides
+    @Singleton
+    fun provideHkdf(): Hkdf = Hkdf.getInstance("HmacSHA256")
 
     @Provides
     @Singleton

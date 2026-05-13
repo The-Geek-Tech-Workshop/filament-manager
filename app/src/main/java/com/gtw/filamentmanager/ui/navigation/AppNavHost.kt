@@ -85,7 +85,6 @@ fun AppNavHost(
                     )?.let { tray ->
                         FilamentDetailsScreen(
                             modifier = modifier,
-                            printer = printer,
                             filamentTray = tray
                         )
                     }

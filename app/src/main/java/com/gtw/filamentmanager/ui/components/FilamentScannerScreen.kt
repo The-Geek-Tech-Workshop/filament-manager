@@ -32,9 +32,9 @@ fun FilamentScannerScreen(modifier: Modifier = Modifier, filament: FilamentSpool
                 textAlign = TextAlign.Center
             )
         } else {
+            QuickTextField("RFID Format", filament.tagFormat.name)
             when (filament) {
                 is BambuFilamentSpool -> {
-                    QuickTextField("RFID Format", "Bambu")
                     Row(modifier = Modifier.padding(0.dp)) {
                         Column(modifier = Modifier.weight(3f)) {
                             QuickTextField("Filament type", filament.filamentType)
